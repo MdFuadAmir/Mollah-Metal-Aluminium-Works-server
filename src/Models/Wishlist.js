@@ -2,7 +2,7 @@ const { ObjectId } = require("mongodb");
 const getCollections = require("../DB/db");
 
 module.exports = (app, client) => {
-  const { wishlistCollection, productsCollection } = getCollections(client);
+  const { wishlistCollection } = getCollections(client);
 
   /* ================= GET WISHLIST ================= */
   app.get("/wishlist", async (req, res) => {

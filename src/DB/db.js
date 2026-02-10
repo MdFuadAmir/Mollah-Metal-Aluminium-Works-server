@@ -6,5 +6,6 @@ module.exports = (client) => {
     productsCollection: db.collection("products"),
     cartsCollection: db.collection("carts"),
     wishlistCollection: db.collection("wishlist"),
+    ordersCollection: db.collection("orders"),
   };
 };

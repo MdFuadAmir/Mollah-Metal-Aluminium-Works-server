@@ -76,32 +76,33 @@ module.exports = (app, client) => {
       res.status(500).send({ message: err.message });
     }
   });
-app.get("/carts-with-details", async (req, res) => {
-  try {
-    const userEmail = req.query.email;
-    if (!userEmail) return res.status(400).send({ message: "Missing user email" });
+  app.get("/carts-with-details", async (req, res) => {
+    try {
+      const userEmail = req.query.email;
+      if (!userEmail)
+        return res.status(400).send({ message: "Missing user email" });
 
-    const cartItems = await cartsCollection
-      .aggregate([
-        { $match: { userEmail } }, // user-specific cart
-        {
-          $lookup: {
-            from: "products",           // products collection
-            localField: "productId",    // cart.productId
-            foreignField: "_id",        // products._id
-            as: "productDetails",
+      const cartItems = await cartsCollection
+        .aggregate([
+          { $match: { userEmail } }, // user-specific cart
+          {
+            $lookup: {
+              from: "products", // products collection
+              localField: "productId", // cart.productId
+              foreignField: "_id", // products._id
+              as: "productDetails",
+            },
           },
-        },
-        { $unwind: "$productDetails" }, // convert array to object
-        { $sort: { createdAt: -1 } },
-      ])
-      .toArray();
+          { $unwind: "$productDetails" }, // convert array to object
+          { $sort: { createdAt: -1 } },
+        ])
+        .toArray();
 
-    res.send(cartItems);
-  } catch (err) {
-    res.status(500).send({ message: err.message });
-  }
-});
+      res.send(cartItems);
+    } catch (err) {
+      res.status(500).send({ message: err.message });
+    }
+  });
   /* ================= DELETE CART ================= */
   app.delete("/carts/:id", async (req, res) => {
     try {

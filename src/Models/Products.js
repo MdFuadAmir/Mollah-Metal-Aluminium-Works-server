@@ -18,18 +18,36 @@ module.exports = (app, client) => {
       res.status(500).send({ message: error.message });
     }
   });
-  // GET ALL PRODUCTS
   app.get("/products", async (req, res) => {
     try {
+      const page = parseInt(req.query.page) || 1;
+      const limit = parseInt(req.query.limit) || 10;
+      const skip = (page - 1) * limit;
+      const category = req.query.category;
+      let query = {};
+    if (category) {
+      query.category = category; // ধরছি product এ category field আছে
+    }
+    const total = await productsCollection.countDocuments(query);
+
       const products = await productsCollection
-        .find()
+        .find(query)
         .sort({ createdAt: -1 })
+        .skip(skip)
+        .limit(limit)
         .toArray();
-      res.send(products);
+
+      res.send({
+        products,
+        total,
+        totalPages: Math.ceil(total / limit),
+        currentPage: page,
+      });
     } catch (error) {
       res.status(500).send({ message: error.message });
     }
   });
+
   // GET SINGLE PRODUCT
   app.get("/products/:id", async (req, res) => {
     try {

@@ -10,6 +10,7 @@ const Products = require("./src/Models/Products");
 const Profile = require("./src/Models/Profile");
 const Cart = require("./src/Models/Cart");
 const wishlist = require("./src/Models/wishlist");
+const Order = require("./src/Models/Order");
 //===================== express app setup ====================//
 const app = express();
 const port = process.env.PORT || 3000;
@@ -44,6 +45,7 @@ async function run() {
     Products(app, client);
     Cart(app, client);
     wishlist(app, client);
+    Order(app, client)
 
    
 
