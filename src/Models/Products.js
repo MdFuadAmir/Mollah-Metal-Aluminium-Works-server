@@ -18,6 +18,7 @@ module.exports = (app, client) => {
       res.status(500).send({ message: error.message });
     }
   });
+  //====
   app.get("/products", async (req, res) => {
     try {
       const page = parseInt(req.query.page) || 1;
@@ -25,10 +26,10 @@ module.exports = (app, client) => {
       const skip = (page - 1) * limit;
       const category = req.query.category;
       let query = {};
-    if (category) {
-      query.category = category; // ধরছি product এ category field আছে
-    }
-    const total = await productsCollection.countDocuments(query);
+      if (category) {
+        query.category = category;
+      }
+      const total = await productsCollection.countDocuments(query);
 
       const products = await productsCollection
         .find(query)
@@ -71,7 +72,7 @@ module.exports = (app, client) => {
     try {
       const { id } = req.params;
       const data = { ...req.body };
-      delete data._id; // ensure _id is not modified
+      delete data._id;
       if (!ObjectId.isValid(id))
         return res.status(400).send({ message: "Invalid ID" });
       const result = await productsCollection.updateOne(
@@ -82,7 +83,7 @@ module.exports = (app, client) => {
         return res.status(404).send({ message: "Product not found" });
       res.send({ message: "Product updated successfully" });
     } catch (error) {
-      console.error(error); // debug
+      console.error(error);
       res.status(500).send({ message: error.message });
     }
   });

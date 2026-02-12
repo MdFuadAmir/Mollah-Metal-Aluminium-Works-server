@@ -8,11 +8,9 @@ module.exports = (app, client) => {
   app.post("/carts", async (req, res) => {
     try {
       const { productId, userEmail, sellType, quantity = 1 } = req.body;
-      // Validation
       if (!productId || !userEmail || !sellType) {
         return res.status(400).send({ message: "Missing required data" });
       }
-      // Check if already in cart
       const exists = await cartsCollection.findOne({
         productId: new ObjectId(productId),
         userEmail,
@@ -20,7 +18,6 @@ module.exports = (app, client) => {
       if (exists) {
         return res.send({ message: "Product already in cart" });
       }
-      // Prepare cart item
       const cartItem = {
         productId: new ObjectId(productId),
         userEmail,
@@ -29,7 +26,7 @@ module.exports = (app, client) => {
         createdAt: new Date(),
       };
       const result = await cartsCollection.insertOne(cartItem);
-      res.send(result); // res.data.insertedId frontend এ ব্যবহার করা যাবে
+      res.send(result);
     } catch (err) {
       res.status(500).send({ message: err.message });
     }
@@ -41,10 +38,9 @@ module.exports = (app, client) => {
       if (!userEmail) {
         return res.status(400).send({ message: "Missing user email" });
       }
-      // Fetch all cart items for this user
       const cartItems = await cartsCollection
         .find({ userEmail })
-        .sort({ createdAt: -1 }) // newest first
+        .sort({ createdAt: -1 }) 
         .toArray();
 
       res.send(cartItems);
@@ -57,16 +53,13 @@ module.exports = (app, client) => {
     try {
       const id = req.params.id;
       const { quantity } = req.body;
-
       if (quantity < 1) {
         return res.status(400).send({ message: "Quantity must be at least 1" });
       }
-
       const result = await cartsCollection.updateOne(
         { _id: new ObjectId(id) },
         { $set: { quantity } },
       );
-
       if (result.modifiedCount === 1) {
         res.send({ message: "Quantity updated successfully" });
       } else {
@@ -84,16 +77,16 @@ module.exports = (app, client) => {
 
       const cartItems = await cartsCollection
         .aggregate([
-          { $match: { userEmail } }, // user-specific cart
+          { $match: { userEmail } }, 
           {
             $lookup: {
-              from: "products", // products collection
-              localField: "productId", // cart.productId
-              foreignField: "_id", // products._id
+              from: "products", 
+              localField: "productId", 
+              foreignField: "_id", 
               as: "productDetails",
             },
           },
-          { $unwind: "$productDetails" }, // convert array to object
+          { $unwind: "$productDetails" }, 
           { $sort: { createdAt: -1 } },
         ])
         .toArray();
