@@ -2,7 +2,7 @@ const { ObjectId } = require("mongodb");
 const getCollections = require("../DB/db");
 
 module.exports = (app, client) => {
-  const { cartsCollection, productsCollection } = getCollections(client);
+  const { cartsCollection, } = getCollections(client);
 
   /* ================= ADD TO CART ================= */
   app.post("/carts", async (req, res) => {

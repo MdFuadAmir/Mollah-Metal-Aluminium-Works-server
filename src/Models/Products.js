@@ -1,34 +1,55 @@
 const { ObjectId } = require("mongodb");
 const getCollections = require("../DB/db");
+const verifyToken = require("../Middlewares/verifyToken");
+const verifyRole = require("../Middlewares/verifyRole");
 
 module.exports = (app, client) => {
-  const { productsCollection } = getCollections(client);
+  const { productsCollection, usersCollection } = getCollections(client);
 
   // CREATE PRODUCT
-  app.post("/products", async (req, res) => {
-    try {
-      const data = req.body;
-      const result = await productsCollection.insertOne({
-        ...data,
-        createdAt: new Date(),
-        rating: 0,
-      });
-      res.send(result);
-    } catch (error) {
-      res.status(500).send({ message: error.message });
-    }
-  });
+  app.post(
+    "/products",
+    verifyToken,
+    verifyRole(usersCollection, ["admin", "moderator"]),
+    async (req, res) => {
+      try {
+        const data = req.body;
+        const result = await productsCollection.insertOne({
+          ...data,
+          createdAt: new Date(),
+          rating: 0,
+        });
+        res.send(result);
+      } catch (error) {
+        res.status(500).send({ message: error.message });
+      }
+    },
+  );
   //====
   app.get("/products", async (req, res) => {
     try {
       const page = parseInt(req.query.page) || 1;
       const limit = parseInt(req.query.limit) || 10;
       const skip = (page - 1) * limit;
+
       const category = req.query.category;
+      const search = req.query.search;
+
       let query = {};
+
       if (category) {
         query.category = category;
       }
+
+      if (search) {
+        query.$or = [
+          { productName: { $regex: search, $options: "i" } },
+          { brand: { $regex: search, $options: "i" } },
+          { category: { $regex: search, $options: "i" } },
+          { subCategory: { $regex: search, $options: "i" } },
+        ];
+      }
+
       const total = await productsCollection.countDocuments(query);
 
       const products = await productsCollection
@@ -48,7 +69,6 @@ module.exports = (app, client) => {
       res.status(500).send({ message: error.message });
     }
   });
-
   // GET SINGLE PRODUCT
   app.get("/products/:id", async (req, res) => {
     try {
@@ -68,40 +88,49 @@ module.exports = (app, client) => {
     }
   });
   // UPDATE PRODUCT
-  app.patch("/products/:id", async (req, res) => {
-    try {
-      const { id } = req.params;
-      const data = { ...req.body };
-      delete data._id;
-      if (!ObjectId.isValid(id))
-        return res.status(400).send({ message: "Invalid ID" });
-      const result = await productsCollection.updateOne(
-        { _id: new ObjectId(id) },
-        { $set: data },
-      );
-      if (result.matchedCount === 0)
-        return res.status(404).send({ message: "Product not found" });
-      res.send({ message: "Product updated successfully" });
-    } catch (error) {
-      console.error(error);
-      res.status(500).send({ message: error.message });
-    }
-  });
-
+  app.patch(
+    "/products/:id",
+    verifyToken,
+    verifyRole(usersCollection, ["admin", "moderator"]),
+    async (req, res) => {
+      try {
+        const { id } = req.params;
+        const data = { ...req.body };
+        delete data._id;
+        if (!ObjectId.isValid(id))
+          return res.status(400).send({ message: "Invalid ID" });
+        const result = await productsCollection.updateOne(
+          { _id: new ObjectId(id) },
+          { $set: data },
+        );
+        if (result.matchedCount === 0)
+          return res.status(404).send({ message: "Product not found" });
+        res.send({ message: "Product updated successfully" });
+      } catch (error) {
+        console.error(error);
+        res.status(500).send({ message: error.message });
+      }
+    },
+  );
   // DELETE PRODUCT
-  app.delete("/products/:id", async (req, res) => {
-    try {
-      const { id } = req.params;
-      if (!ObjectId.isValid(id))
-        return res.status(400).send({ message: "Invalid ID" });
-      const result = await productsCollection.deleteOne({
-        _id: new ObjectId(id),
-      });
-      if (result.deletedCount === 0)
-        return res.status(404).send({ message: "Product not found" });
-      res.send({ message: "Product deleted successfully" });
-    } catch (error) {
-      res.status(500).send({ message: error.message });
-    }
-  });
+  app.delete(
+    "/products/:id",
+    verifyToken,
+    verifyRole(usersCollection, ["admin", "moderator"]),
+    async (req, res) => {
+      try {
+        const { id } = req.params;
+        if (!ObjectId.isValid(id))
+          return res.status(400).send({ message: "Invalid ID" });
+        const result = await productsCollection.deleteOne({
+          _id: new ObjectId(id),
+        });
+        if (result.deletedCount === 0)
+          return res.status(404).send({ message: "Product not found" });
+        res.send({ message: "Product deleted successfully" });
+      } catch (error) {
+        res.status(500).send({ message: error.message });
+      }
+    },
+  );
 };

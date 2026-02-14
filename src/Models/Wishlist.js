@@ -1,6 +1,5 @@
 const { ObjectId } = require("mongodb");
 const getCollections = require("../DB/db");
-
 module.exports = (app, client) => {
   const { wishlistCollection } = getCollections(client);
 

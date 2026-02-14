@@ -1,11 +1,13 @@
 const { ObjectId } = require("mongodb");
 const getCollections = require("../DB/db");
-
+const verifyToken = require("../Middlewares/verifyToken");
+const verifyRole = require("../Middlewares/verifyRole");
 module.exports = (app, client) => {
   const { usersCollection, productsCollection, ordersCollection } =
     getCollections(client);
+  const verifyAdmin = verifyRole(usersCollection, ["admin", "moderator"]);
   // ===== ADMIN STATS =====
-  app.get("/admin/stats", async (req, res) => {
+  app.get("/admin/stats", verifyToken, verifyAdmin, async (req, res) => {
     try {
       const totalUsers = await usersCollection.countDocuments({
         role: "user",
@@ -57,29 +59,34 @@ module.exports = (app, client) => {
     }
   });
   // ===== RECENT ORDERS =====
-  app.get("/admin/recent-orders", async (req, res) => {
-    try {
-      const recentOrders = await ordersCollection
-        .find()
-        .sort({ createdAt: -1 })
-        .limit(10)
-        .toArray();
+  app.get(
+    "/admin/recent-orders",
+    verifyToken,
+    verifyAdmin,
+    async (req, res) => {
+      try {
+        const recentOrders = await ordersCollection
+          .find()
+          .sort({ createdAt: -1 })
+          .limit(10)
+          .toArray();
 
-      res.send(recentOrders);
-    } catch (err) {
-      console.error("Recent orders error:", err);
-      res.status(500).send({ message: "Failed to fetch recent orders" });
-    }
-  });
+        res.send(recentOrders);
+      } catch (err) {
+        console.error("Recent orders error:", err);
+        res.status(500).send({ message: "Failed to fetch recent orders" });
+      }
+    },
+  );
   // ===== ORDER STATS (CHART) =====
-  app.get("/admin/order-stats", async (req, res) => {
+  app.get("/admin/order-stats", verifyToken, verifyAdmin, async (req, res) => {
     try {
       // Aggregate orders by day of week
       const result = await ordersCollection
         .aggregate([
           {
             $group: {
-              _id: { $dayOfWeek: "$createdAt" }, // 1 = Sunday, 7 = Saturday
+              _id: { $dayOfWeek: "$createdAt" }, 
               orders: { $sum: 1 },
             },
           },
@@ -89,7 +96,6 @@ module.exports = (app, client) => {
 
       const days = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
 
-      // Fill missing days with 0
       const formatted = days.map((day, index) => {
         const dayData = result.find((r) => r._id === index + 1);
         return {
@@ -105,46 +111,51 @@ module.exports = (app, client) => {
     }
   });
   // ===== ORDER STATS (CHART) =====
-  app.get("/admin/revenue-stats", async (req, res) => {
-    try {
-      const result = await ordersCollection
-        .aggregate([
-          { $match: { paymentStatus: "paid" } },
-          {
-            $group: {
-              _id: { $month: "$createdAt" },
-              revenue: { $sum: "$totalPrice" },
+  app.get(
+    "/admin/revenue-stats",
+    verifyToken,
+    verifyAdmin,
+    async (req, res) => {
+      try {
+        const result = await ordersCollection
+          .aggregate([
+            { $match: { paymentStatus: "paid" } },
+            {
+              $group: {
+                _id: { $month: "$createdAt" },
+                revenue: { $sum: "$totalPrice" },
+              },
             },
-          },
-          { $sort: { _id: 1 } },
-        ])
-        .toArray();
+            { $sort: { _id: 1 } },
+          ])
+          .toArray();
 
-      const months = [
-        "Jan",
-        "Feb",
-        "Mar",
-        "Apr",
-        "May",
-        "Jun",
-        "Jul",
-        "Aug",
-        "Sep",
-        "Oct",
-        "Nov",
-        "Dec",
-      ];
+        const months = [
+          "Jan",
+          "Feb",
+          "Mar",
+          "Apr",
+          "May",
+          "Jun",
+          "Jul",
+          "Aug",
+          "Sep",
+          "Oct",
+          "Nov",
+          "Dec",
+        ];
 
-      // Fill missing months with 0 revenue
-      const formatted = months.map((m, index) => {
-        const monthData = result.find((r) => r._id === index + 1);
-        return { name: m, revenue: monthData ? monthData.revenue : 0 };
-      });
+        // Fill missing months with 0 revenue
+        const formatted = months.map((m, index) => {
+          const monthData = result.find((r) => r._id === index + 1);
+          return { name: m, revenue: monthData ? monthData.revenue : 0 };
+        });
 
-      res.send(formatted);
-    } catch (err) {
-      console.error(err);
-      res.status(500).send({ message: "Revenue stats error" });
-    }
-  });
+        res.send(formatted);
+      } catch (err) {
+        console.error(err);
+        res.status(500).send({ message: "Revenue stats error" });
+      }
+    },
+  );
 };
