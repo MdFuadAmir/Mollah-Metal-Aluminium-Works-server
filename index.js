@@ -26,7 +26,11 @@ const port = process.env.PORT || 3000;
 // MIDDLEWARE
 app.use(
   cors({
-    origin: "http://localhost:5173",
+    origin: [
+      "http://localhost:5173",
+      "https://mmaw-44dea.web.app",
+      "https://mmaw-server.vercel.app",
+    ],
     credentials: true,
   }),
 );
