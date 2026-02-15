@@ -10,12 +10,12 @@ const Users = require("./src/Models/Users");
 const Profile = require("./src/Models/Profile");
 const Products = require("./src/Models/Products");
 const Cart = require("./src/Models/Cart");
-const wishlist = require("./src/Models/wishlist");
+const Wishlist = require("./src/Models/Wishlist");
 const Order = require("./src/Models/Order");
 const AdminStats = require("./src/Models/AdminStats");
 const UserStats = require("./src/Models/UserStats");
 const Contact = require("./src/Models/Contact");
-const feedbacks = require("./src/Models/feedbacks");
+const Feedbacks = require("./src/Models/Feedbacks");
 const Review = require("./src/Models/Review");
 
 //===================== express app setup ====================//
@@ -51,12 +51,12 @@ async function run() {
     Profile(app, client);
     Products(app, client);
     Cart(app, client);
-    wishlist(app, client);
+    Wishlist(app, client);
     Order(app, client);
     AdminStats(app, client);
     UserStats(app, client);
     Contact(app, client);
-    feedbacks(app, client);
+    Feedbacks(app, client);
     Review(app, client);
 
     //==================== MongoDB connection test =================//
