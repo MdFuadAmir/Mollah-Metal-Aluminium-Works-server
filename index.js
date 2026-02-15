@@ -24,16 +24,25 @@ const port = process.env.PORT || 3000;
 //===================== middleware ====================//
 
 // MIDDLEWARE
-app.use(
-  cors({
-    origin: [
-      "http://localhost:5173",
-      "https://mmaw-44dea.web.app",
-      "https://mmaw-server.vercel.app",
-    ],
-    credentials: true,
-  }),
-);
+// app.use(
+//   cors({
+//     origin: [
+//       "http://localhost:5173",
+//       "https://mmaw-44dea.web.app",
+//     ],
+//     credentials: true,
+//   }),
+// );
+app.use(cors({
+  origin: [
+    "http://localhost:5173",
+    "https://mmaw-44dea.web.app"
+  ],
+  credentials: true,
+  methods: ["GET", "POST", "PUT", "PATCH", "DELETE"],
+  allowedHeaders: ["Content-Type", "Authorization"]
+}));
+
 app.use(express.json());
 //===================== FIREBASE MIDDLEWARE =========================//
 
