@@ -66,6 +66,7 @@ module.exports = (app, client) => {
         currentPage: page,
       });
     } catch (error) {
+      console.log(error);
       res.status(500).send({ message: error.message });
     }
   });
