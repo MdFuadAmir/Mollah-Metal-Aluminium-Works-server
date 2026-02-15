@@ -1,5 +1,5 @@
 node_modules
 .env
 firebase_admin_key.json
-.vercel
 convertKey.js
+vercel.json
