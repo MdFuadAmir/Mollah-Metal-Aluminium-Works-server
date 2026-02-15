@@ -6,25 +6,6 @@ const verifyRole = require("../Middlewares/verifyRole");
 module.exports = (app, client) => {
   const { productsCollection, usersCollection } = getCollections(client);
 
-  // CREATE PRODUCT
-  app.post(
-    "/products",
-    verifyToken,
-    verifyRole(usersCollection, ["admin", "moderator"]),
-    async (req, res) => {
-      try {
-        const data = req.body;
-        const result = await productsCollection.insertOne({
-          ...data,
-          createdAt: new Date(),
-          rating: 0,
-        });
-        res.send(result);
-      } catch (error) {
-        res.status(500).send({ message: error.message });
-      }
-    },
-  );
   //====
   app.get("/products", async (req, res) => {
     try {
@@ -88,6 +69,26 @@ module.exports = (app, client) => {
       res.status(500).send({ message: error.message });
     }
   });
+  // CREATE PRODUCT
+  app.post(
+    "/products",
+    verifyToken,
+    verifyRole(usersCollection, ["admin", "moderator"]),
+    async (req, res) => {
+      try {
+        const data = req.body;
+        const result = await productsCollection.insertOne({
+          ...data,
+          createdAt: new Date(),
+          rating: 0,
+        });
+        res.send(result);
+      } catch (error) {
+        res.status(500).send({ message: error.message });
+      }
+    },
+  );
+
   // UPDATE PRODUCT
   app.patch(
     "/products/:id",
